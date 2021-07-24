@@ -18,4 +18,21 @@ describe('posting a message to a personal timeline', () => {
             expect(list).toStrictEqual([ 'hello Kong' ]);    
         });
     })
+
+    test('should not post an empty message as invalid to personal timeline', async () => {
+
+        // Arrange
+        const repository = createTimelineInMemoryAdapter();
+        const user = 'Kong'
+        const message = '';
+        const postAMessage = createPostMessage({repository});
+
+        // Act
+        const result = postAMessage({user, message});
+
+        // Assert
+        result.subscribe((list: Array<string> | undefined) => {
+            expect(list).toStrictEqual([]);    
+        });
+    })
 });

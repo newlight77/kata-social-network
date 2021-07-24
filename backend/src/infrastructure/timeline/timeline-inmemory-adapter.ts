@@ -7,8 +7,12 @@ export const createTimelineInMemoryAdapter = (): TimelinePort => {
 
     return {
         saveMassage({user, message}: {user: string, message: string}): Observable<Array<string> | undefined> {
-            data.set(user, [message]);
-            return of(data.get(user));
+            let items = []
+            if (message !== '')
+                items.push(message);
+            
+            data.set(user, items);
+            return of(items);
         }
     }
 }
