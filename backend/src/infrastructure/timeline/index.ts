@@ -1,1 +1,1 @@
-export * from './timeline-inmemory-adapter'
+export * from './timeline-inmemory-repository-adapter'
