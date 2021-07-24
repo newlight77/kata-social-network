@@ -10,6 +10,7 @@
     "test:watch": "jest --coverage --watch"
   },
   "dependencies": {
+    "rxjs": "^7.2.0",
     "typescript": "^4.3.5"
   },
   "devDependencies": {
