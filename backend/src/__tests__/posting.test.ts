@@ -1,4 +1,4 @@
-import { InvalidArgumentException, Timeline } from '../domain/timeline';
+import { InvalidArgumentException, Timeline, createTimeline } from '../domain/timeline';
 import { createTimelineInMemoryRepositoryAdapter } from '../infrastructure/timeline';
 import { createPostMessage } from '../usecase/post-message';
 
@@ -28,7 +28,6 @@ describe('posting a message to a timeline', () => {
         const username = 'Kong';
         const message = '';
 
-
         try {
             // Act
             postAMessage({username, message});
@@ -47,14 +46,12 @@ describe('posting a message to a timeline', () => {
 
         // Arrange
         const repository = createTimelineInMemoryRepositoryAdapter();
-        const postAMessage = createPostMessage({repository});
-        const result1 = postAMessage({username: 'King', message: 'first message'});
-        result1.subscribe((timeline: Timeline) => {
-            expect(timeline.messages).toStrictEqual([ 'first message' ]);    
-        });
+        const initialTimeline = createTimeline({username: 'King', messages: ['first message']});
+        repository.saveMassage(initialTimeline);
 
         const username = 'Kong';
         const message = 'second message';
+        const postAMessage = createPostMessage({repository});
 
         // Act
         const result = postAMessage({username: username, message});
@@ -69,6 +66,29 @@ describe('posting a message to a timeline', () => {
         })
         repository.getByUsername({username:'Kong'}).subscribe((timeline: Timeline) => {
             expect(timeline.messages).toStrictEqual(['second message']);   
+        })
+    })
+
+    test('should post a message the user non-empty timeline ', async () => {
+
+        // Arrange
+        const repository = createTimelineInMemoryRepositoryAdapter();
+        const username = 'Kong';
+        const initialTimeline = createTimeline({username, messages: ['first message', 'second message']});
+        repository.saveMassage(initialTimeline);
+
+        const postAMessage = createPostMessage({repository});
+        const message = 'third message';
+
+        // Act
+        const result = postAMessage({username: username, message});
+
+        // Assert
+        result.subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual(['first message', 'second message', 'third message']);    
+        });
+        repository.getByUsername({username:'Kong'}).subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual(['first message', 'second message', 'third message']);   
         })
     })
 });
