@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
+import { Timeline } from '../../domain/timeline';
 
 export interface TimelineRepositoryPort {
-    saveMassage({user, message}: {user: string, message: string}): Observable<Array<string>| undefined>
-    getByUser({user}: {user: string}): Observable<Array<string> | undefined>
+    saveMassage(timeline: Timeline): Observable<Timeline>
+    getByUsername({username}: {username: string}): Observable<Timeline>
 }

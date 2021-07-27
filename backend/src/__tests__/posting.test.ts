@@ -1,21 +1,22 @@
+import { InvalidArgumentException, Timeline } from '../domain/timeline';
 import { createTimelineInMemoryRepositoryAdapter } from '../infrastructure/timeline';
-import { createPostMessage } from '../usecase/timeline';
+import { createPostMessage } from '../usecase/post-message';
 
-describe('posting a message to a personal timeline', () => {
-    test('should post an valid messsage to personal timeline', async () => {
+describe('posting a message to a timeline', () => {
+    test('should post a valid messsage to personal timeline', async () => {
 
         // Arrange
         const repository = createTimelineInMemoryRepositoryAdapter();
-        const user = 'Kong';
-        const message = 'hello Kong';
         const postAMessage = createPostMessage({repository});
+        const username = 'Kong';
+        const message = 'hello Kong';
 
         // Act
-        const result = postAMessage({user, message});
+        const result = postAMessage({username, message});
 
         // Assert
-        result.subscribe((list: Array<string> | undefined) => {
-            expect(list).toStrictEqual([ 'hello Kong' ]);    
+        result.subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual([ 'hello Kong' ]);    
         });
     })
 
@@ -23,35 +24,51 @@ describe('posting a message to a personal timeline', () => {
 
         // Arrange
         const repository = createTimelineInMemoryRepositoryAdapter();
-        const user = 'Kong';
-        const message = '';
         const postAMessage = createPostMessage({repository});
+        const username = 'Kong';
+        const message = '';
+
+
+        try {
+            // Act
+            postAMessage({username, message});
+        } catch (error) {
+            // Assert
+            expect(error).toBeInstanceOf(InvalidArgumentException);
+            expect(error).toHaveProperty('message', 'The arguement is invalid. It can not be null or blank');
+        }
 
         // Act
-        const result = postAMessage({user, message});
-
-        // Assert
-        result.subscribe((list: Array<string> | undefined) => {
-            expect(list).toStrictEqual([]);    
-        });
+        // const t = () => postAMessage({username, message});
+        // expect(postAMessage({username, message})).toThrow(InvalidArgumentException);
     })
 
-    test('should post message to an isolated user timeline', async () => {
+    test('should post a message to another user timeline', async () => {
 
         // Arrange
         const repository = createTimelineInMemoryRepositoryAdapter();
         const postAMessage = createPostMessage({repository});
+        const result1 = postAMessage({username: 'King', message: 'first message'});
+        result1.subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual([ 'first message' ]);    
+        });
+
+        const username = 'Kong';
+        const message = 'second message';
 
         // Act
-        postAMessage({user:'King', message: 'message 1'});
-        postAMessage({user:'Kong', message: 'message 2'});
+        const result = postAMessage({username: username, message});
 
         // Assert
-        repository.getByUser({user:'King'}).subscribe((list: Array<string> | undefined) => {
-            expect(list).toStrictEqual(['message 1']);   
+        result.subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual([ 'second message' ]);    
+        });
+
+        repository.getByUsername({username:'King'}).subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual(['first message']);   
         })
-        repository.getByUser({user:'Kong'}).subscribe((list: Array<string> | undefined) => {
-            expect(list).toStrictEqual(['message 2']);   
+        repository.getByUsername({username:'Kong'}).subscribe((timeline: Timeline) => {
+            expect(timeline.messages).toStrictEqual(['second message']);   
         })
     })
 });
